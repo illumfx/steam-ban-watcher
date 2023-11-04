@@ -7,6 +7,8 @@ from flask import Flask, render_template, send_from_directory
 from bs4 import BeautifulSoup
 from apscheduler.schedulers.background import BackgroundScheduler
 
+from database import db
+
 REGEX = r'(?P<CUSTOMPROFILE>https?://steamcommunity.com/id/[A-Za-z_0-9]+)|(?P<CUSTOMURL>/id/[A-Za-z_0-9]+)|(?P<PROFILE>https?://steamcommunity.com/profiles/[0-9]+)|(?P<STEAMID2>STEAM_[10]:[10]:[0-9]+)|(?P<STEAMID3>\[U:[10]:[0-9]+\])|(?P<steam_account>[^/][0-9]{8,})'
 UNSUPPORTED_GROUPS = ["STEAMID2", "STEAMID3"]
 
@@ -18,6 +20,8 @@ scheduler.add_job(func=background_task, trigger="interval", seconds=10)
 scheduler.start()
 
 app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
+db.init_app(app)
 
 def get_bans(account_url):  
     res = requests.get(account_url)
