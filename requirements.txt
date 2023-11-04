@@ -2,3 +2,4 @@ bs4
 flask
 flask-sqlalchemy
 apscheduler
+python-dotenv

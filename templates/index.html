@@ -13,7 +13,24 @@
 <body>
     <div class="container w-50 position-absolute top-50 start-50 translate-middle">
         <h1 class="text-center text-danger">Vac-Watcher</h1>
-        <b><i>no skeet no talk</i></b>
+        <br>
+        <form method="post">
+            <div class="row">
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Custom Name", name="name", value="{{ request.form['name'] }}">
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Steam Account", name="account", value="{{ request.form['account'] }}">
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Token", name="token", value="{{ request.form['token'] }}">
+                </div>
+                <div class="col">
+                    <input class="btn btn-primary" type="submit" value="Submit">
+                </div>
+            </div>
+        </form>
+        <br>
         <table class="table">
             <thead>
                 <tr>
@@ -21,18 +38,32 @@
                     <th>Name</th>
                     <th>URL</th>
                     <th>Status</th>
-                    <th>Added</th>
+                    <th>Watching Since</th>
                     <th>Detected Ban</th>
                 </tr>
             </thead>
+            {% for account in accounts %}
             <tbody>
-                <th>1</th>
-                <td>Test Name</td>
-                <td>Test URL</td>
+                <th>{{ account.id }}</th>
+                <td>{{ account.display_name }}</td>
+                <td>{{ "https://steamcommunity.com/profiles/" + account.steam_id }}</td>
+                {% if account.times_banned %}
+                <td class="text-danger-emphasis">{{ account.times_banned }} times banned</td>
+                {% else %}
                 <td>Not banned</td>
-                <td>tomorow</td>
-                <td>never</td>
+                {% endif %}
+                <td>{{ account.watching_since }}</td>
+                {% if account.banned_since %}
+                <td>{{ account.banned_since }}</td>  
+                {% else %}
+                <td>Never</td>
+                {% endif %}
             </tbody>
+            {% endfor %}
+
+            {% for message in get_flashed_messages() %}
+                <div class="alert alert-danger" role="alert">{{ message }}</div>
+            {% endfor %}
         </table>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"

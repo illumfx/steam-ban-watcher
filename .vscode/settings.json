@@ -1,0 +1,10 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "vac-watcher-db",
+            "database": "\\\\wsl.localhost\\Ubuntu\\home\\nico\\steam-ban-watcher\\instance\\project.db"
+        }
+    ]
+}
