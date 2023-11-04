@@ -5,6 +5,7 @@ import time
 import secrets
 import atexit
 import json
+import humanize
 from datetime import datetime
 from dotenv import load_dotenv
 from flask import Flask, render_template, send_from_directory, request, flash, redirect, url_for
@@ -20,7 +21,6 @@ REGEX = r'(?P<CUSTOMPROFILE>https?://steamcommunity.com/id/[A-Za-z_0-9]+)|(?P<CU
 UNSUPPORTED_GROUPS = ["STEAMID2", "STEAMID3"]
 
 def background_task():
-    print(time.strftime("%A, %d. %B %Y %I:%M:%S %p"))
     with app.app_context():
         if accounts := db.session.execute(db.select(models.SteamAccount).order_by(models.SteamAccount.id)).scalars():
             for account in accounts:
@@ -41,16 +41,14 @@ def background_task():
                     
                     if new_ban:
                         account.banned_since = datetime.now()
-                
-                db.session.commit()
-                    
-            
-    
+                        
+                app.last_check=datetime.now()
+                db.session.commit()    
+                               
 scheduler = BackgroundScheduler(daemon=True)
 scheduler.add_job(func=background_task, trigger="interval", seconds=60)
 scheduler.start()
 
-print(os.environ)
 if os.environ.get("MANAGE_TOKEN"):
     print(f"Using provided token `{os.environ["MANAGE_TOKEN"]}`")
 else:
@@ -61,6 +59,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.urandom(24).hex()
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
 #app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite://"
+app.last_check = datetime.now()
 db.init_app(app)
 
 with app.app_context():
@@ -92,21 +91,12 @@ def parse_account(steam_account: str, matched_group: str):
         
     elif matched_group == "CUSTOMPROFILE":
         # Get id from api
-        # https://steamcommunity.com/id/illumfx/
         return get_steamid(steam_account.split("/")[-1])
         
     elif matched_group == "CUSTOMURL":
         # Get id from api
         return steam_account.split("/")[-1]
     
-    # if matched_group == "CUSTOMURL":
-    #     print(get_steamid(steam_account))
-    #     return "https://steamcommunity.com/" + steam_account
-    # elif matched_group == "steam_account":
-    #     print(get_steamid(steam_account))
-    #     return "https://steamcommunity.com/profiles/" + steam_account
-    # else:
-    #     return steam_account
     return
     
 def get_steamid(account_name):
@@ -130,7 +120,7 @@ def favicon():
 def index():
     if request.method == "GET":
         accounts = db.session.execute(db.select(models.SteamAccount).order_by(models.SteamAccount.id)).scalars()
-        return render_template("index.html", accounts=accounts)
+        return render_template("index.html", accounts=accounts, last_checked=app.last_check)
     elif request.method == "POST":
         display_name = request.form["name"]
         steam_account = request.form["account"]
@@ -154,8 +144,5 @@ def index():
       
     
 if __name__ == "__main__":
-    #get_bans("76561198125638897") # MoreKombat (Gameban)
-    #get_bans("76561199125501660") # Thorben (VAC)
-    
     app.run(host="0.0.0.0", port=6546, debug=True)
     atexit.register(lambda: scheduler.shutdown())

@@ -11,19 +11,23 @@
 </head>
 
 <body>
-    <div class="container w-50 position-absolute top-50 start-50 translate-middle">
+    <div class="container w-50 position-absolute top-50 start-50 translate-middle shadow p-3 mb-5 bg-body-tertiary rounded">
         <h1 class="text-center text-danger">Vac-Watcher</h1>
+        <h4 class="text-center">Last update: {{ last_checked.strftime("%d.%m.%Y %H:%M:%S") }}</h4>
         <br>
         <form method="post">
             <div class="row">
                 <div class="col">
-                    <input type="text" class="form-control" placeholder="Custom Name", name="name", value="{{ request.form['name'] }}">
+                    <input type="text" class="form-control" placeholder="Custom Name" , name="name" ,
+                        value="{{ request.form['name'] }}", required>
                 </div>
                 <div class="col">
-                    <input type="text" class="form-control" placeholder="Steam Account", name="account", value="{{ request.form['account'] }}">
+                    <input type="text" class="form-control" placeholder="Steam Account" , name="account" ,
+                        value="{{ request.form['account'] }}", required>
                 </div>
                 <div class="col">
-                    <input type="text" class="form-control" placeholder="Token", name="token", value="{{ request.form['token'] }}">
+                    <input type="text" class="form-control" placeholder="Token" , name="token" ,
+                        value="{{ request.form['token'] }}", required>
                 </div>
                 <div class="col">
                     <input class="btn btn-primary" type="submit" value="Submit">
@@ -46,15 +50,16 @@
             <tbody>
                 <th>{{ account.id }}</th>
                 <td>{{ account.display_name }}</td>
-                <td>{{ "https://steamcommunity.com/profiles/" + account.steam_id }}</td>
+                <td><a href="{{ " https://steamcommunity.com/profiles/" + account.steam_id }}" target="_blank">{{
+                        account.steam_id }}</a></td>
                 {% if account.times_banned %}
                 <td class="text-danger-emphasis">{{ account.times_banned }} times banned</td>
                 {% else %}
                 <td>Not banned</td>
                 {% endif %}
-                <td>{{ account.watching_since }}</td>
+                <td>{{ account.watching_since.strftime("%d.%m.%Y %H:%M:%S") }}</td>
                 {% if account.banned_since %}
-                <td>{{ account.banned_since }}</td>  
+                <td>{{ account.banned_since.strftime("%d.%m.%Y %H:%M:%S") }}</td>
                 {% else %}
                 <td>Never</td>
                 {% endif %}
@@ -62,7 +67,7 @@
             {% endfor %}
 
             {% for message in get_flashed_messages() %}
-                <div class="alert alert-danger" role="alert">{{ message }}</div>
+            <div class="alert alert-danger" role="alert">{{ message }}</div>
             {% endfor %}
         </table>
     </div>
