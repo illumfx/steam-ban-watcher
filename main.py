@@ -47,7 +47,7 @@ def background_task():
             
     
 scheduler = BackgroundScheduler(daemon=True)
-scheduler.add_job(func=background_task, trigger="interval", seconds=10)
+scheduler.add_job(func=background_task, trigger="interval", seconds=60)
 scheduler.start()
 
 print(os.environ)
