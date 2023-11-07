@@ -1,79 +1,100 @@
-<!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
-
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vac-Watcher™</title>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
-</head>
-
-<body>
-    <div class="container w-50 position-absolute top-50 start-50 translate-middle shadow p-3 mb-5 bg-body-tertiary rounded">
-        <h1 class="text-center text-danger">Vac-Watcher</h1>
-        <h4 class="text-center">Last update: {{ last_checked.strftime("%d.%m.%Y %H:%M:%S") }}</h4>
-        <br>
-        <form method="post">
-            <div class="row">
-                <div class="col">
-                    <input type="text" class="form-control" placeholder="Custom Name" , name="name" ,
-                        value="{{ request.form['name'] }}", required>
-                </div>
-                <div class="col">
-                    <input type="text" class="form-control" placeholder="Steam Account" , name="account" ,
-                        value="{{ request.form['account'] }}", required>
-                </div>
-                <div class="col">
-                    <input type="text" class="form-control" placeholder="Token" , name="token" ,
-                        value="{{ request.form['token'] }}", required>
-                </div>
-                <div class="col">
-                    <input class="btn btn-primary" type="submit" value="Submit">
-                </div>
-            </div>
-        </form>
-        <br>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>URL</th>
-                    <th>Status</th>
-                    <th>Watching Since</th>
-                    <th>Detected Ban</th>
-                </tr>
-            </thead>
-            {% for account in accounts %}
-            <tbody>
-                <th>{{ account.id }}</th>
-                <td>{{ account.display_name }}</td>
-                <td><a href="{{ " https://steamcommunity.com/profiles/" + account.steam_id }}" target="_blank">{{
-                        account.steam_id }}</a></td>
-                {% if account.times_banned %}
-                <td class="text-danger-emphasis">{{ account.times_banned }} times banned</td>
-                {% else %}
-                <td>Not banned</td>
-                {% endif %}
-                <td>{{ account.watching_since.strftime("%d.%m.%Y %H:%M:%S") }}</td>
-                {% if account.banned_since %}
-                <td>{{ account.banned_since.strftime("%d.%m.%Y %H:%M:%S") }}</td>
-                {% else %}
-                <td>Never</td>
-                {% endif %}
-            </tbody>
-            {% endfor %}
-
-            {% for message in get_flashed_messages() %}
-            <div class="alert alert-danger" role="alert">{{ message }}</div>
-            {% endfor %}
-        </table>
+{% extends "layout.html" %}
+{% block content %}
+<h1 class="text-center text-danger">Vac-Watcher</h1>
+<h4 class="text-center">Last update: {{ last_checked.strftime("%d.%m.%Y %H:%M:%S") }}</h4>
+<br>
+{% if current_user.is_authenticated %}
+<form method="post">
+    <div class="row">
+        <div class="col">
+            <input type="text" class="form-control" placeholder="Custom Name" , name="name" ,
+                value="{{ request.form['name'] }}" , required>
+        </div>
+        <div class="col">
+            <input type="text" class="form-control" placeholder="Steam Account" , name="account" ,
+                value="{{ request.form['account'] }}" , required>
+        </div>
+        <div class="col">
+            <input class="btn btn-primary w-100" type="submit" value="Submit">
+        </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-        crossorigin="anonymous"></script>
-</body>
-
-</html>
+</form>
+{% endif %}
+<br>
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>URL</th>
+            <th>Status</th>
+            <th>Watching Since</th>
+            <th>Detected Ban</th>
+            {% if current_user.is_authenticated %}
+            <th>Actions</th>
+            {% endif %}
+        </tr>
+    </thead>
+    {% for account in accounts %}
+    <tbody>
+        <tr>
+            <th>{{ account.id }}</th>
+            <td>{{ account.display_name }}</td>
+            <td><a href="{{ " https://steamcommunity.com/profiles/" + account.steam_id }}" target="_blank">{{
+                    account.steam_id }}</a></td>
+            {% if account.times_banned %}
+            <td class="text-danger-emphasis">{{ account.times_banned }} times banned</td>
+            {% else %}
+            <td>Not banned</td>
+            {% endif %}
+            <td>{{ account.watching_since.strftime("%d.%m.%Y %H:%M:%S") }}</td>
+            {% if account.banned_since %}
+            <td>{{ account.banned_since.strftime("%d.%m.%Y %H:%M:%S") }}</td>
+            {% else %}
+            <td>Never</td>
+            {% endif %}
+            {% if current_user.is_authenticated %}
+            <div class="modal fade" id="deleteModal{{ account.id }}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h1 class="modal-title fs-5" id="deleteModalLabel">Delete</h1>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      Are you sure you want to delete <i>{{ account.steam_id }}</i>?
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <form action="{{ url_for('delete_steam_account', account_id=account.steam_id) }}" method="post">
+                      <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Delete</button>
+                    </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% if current_user.admin_lvl >= 1 %}
+              <th>    
+                <a class="btn btn-warning btn-sm" href="{{ url_for('info_steam_account', account_id=account.steam_id) }}" role="button"><i class="bi-info"></i></a>  
+                {% if current_user.uuid == account.added_by or current_user.admin_lvl == 2 %}
+                <a class="btn btn-primary btn-sm" href="{{ url_for('update_steam_account', account_id=account.steam_id) }}"><i class="bi-pencil-square"></i></a>
+                <a class="btn btn-danger btn-sm" href="{{ url_for('delete_steam_account', account_id=account.steam_id) }}" data-bs-toggle="modal" data-bs-target="#deleteModal{{ account.id }}" role="button"><i class="bi-trash"></i></a>
+                {% else %}
+        
+                <a class="btn btn-primary btn-sm disabled" role="button"><i class="bi-pencil-square"></i></a>
+                <a class="btn btn-danger btn-sm disabled" data-bs-toggle="modal" data-bs-target="#deleteModal" role="button"><i class="bi-trash"></i></a>
+                {% endif %}
+            </th>
+              {% else %}
+              <th>    
+                <a class="btn btn-warning btn-sm disabled" role="button"><i class="bi-info"></i></a>   
+                <a class="btn btn-primary btn-sm disabled" role="button"><i class="bi-pencil-square"></i></a>
+                <a class="btn btn-danger btn-sm disabled" data-bs-toggle="modal" data-bs-target="#deleteModal" role="button"><i class="bi-trash"></i></a>
+            </th> 
+            {% endif %}
+            {% endif %}
+        </tr>
+    </tbody>
+    {% endfor %}
+</table>
+{% endblock %}

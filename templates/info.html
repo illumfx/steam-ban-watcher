@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+{% block content %}
+<br>
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>URL</th>
+            <th>Status</th>
+            <th>Watching Since</th>
+            <th>Detected Ban</th>
+            <th>Added By</th>
+            <th>VAC Banned</th>
+            <th>Game Banned</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th>{{ steam_account.id }}</th>
+            <td>{{ steam_account.display_name }}</td>
+            <td><a href="{{ " https://steamcommunity.com/profiles/" + steam_account.steam_id }}" target="_blank">{{
+                    steam_account.steam_id }}</a></td>
+            {% if steam_account.times_banned %}
+            <td class="text-danger-emphasis">{{ steam_account.times_banned }} times banned</td>
+            {% else %}
+            <td>Not banned</td>
+            {% endif %}
+            <td>{{ steam_account.watching_since.strftime("%d.%m.%Y %H:%M:%S") }}</td>
+            {% if steam_account.banned_since %}
+            <td>{{ steam_account.banned_since.strftime("%d.%m.%Y %H:%M:%S") }}</td>
+            {% else %}
+            <td>Never</td>
+            {% endif %}   
+            <td>{{ added_by.username }}</td>
+            <td>{{ steam_account.vac_banned }}</td>
+            <td>{{ steam_account.game_banned }}</td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+{% block content %}
+<br>
+<table class="table table-hover w-50">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Admin Level</th>
+      {% if current_user.admin_lvl %}
+      <th>Actions</th>
+      {% endif %}
+    </tr>
+  </thead>
+  {% for account in accounts %}
+  <div class="modal fade" id="deleteModal{{ account.id }}" tabindex="-1" aria-labelledby="deleteModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="deleteModalLabel">Delete</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete <i>{{ account.username }}</i>?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <form action="{{ url_for('delete_admin_account', account_id=account.uuid) }}" method="post">
+            <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Delete</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <tbody>
+    <tr>
+      <th>{{ account.id }}</th>
+      <td>{{ account.username }}</td>
+      <td>{{ account.admin_lvl }}</td>
+      <th>
+      {% if current_user.admin_lvl == 2 %}
+        <a class="btn btn-danger btn-sm" href="{{ url_for('delete_admin_account', account_id=account.uuid) }}"
+          data-bs-toggle="modal" data-bs-target="#deleteModal{{ account.id }}" role="button"><i
+            class="bi-trash"></i></a>
+      </th>
+      {% else %}
+      <th>
+        <a class="btn btn-primary btn-sm disabled" role="button"><i class="bi-pencil-square"></i></a>
+        <a class="btn btn-danger btn-sm disabled" role="button"><i class="bi-trash"></i></a>      
+      </th>
+      {% endif %}
+    </tr>
+  </tbody>
+  {% endfor %}
+</table>
+{% if current_user.admin_lvl == 2 %}
+<h2>Create User</h2>
+<main class="form-signin text-center w-25">
+  <br>
+  <form action="admin" method="POST">
+    <div class="form-floating">
+      <input type="text" class="form-control" id="floatingInput" name="username" placeholder="Username" minlength="4"
+        maxlength="20" required>
+      <label for="floatingInput">Username (4 to 20 characters)</label>
+    </div>
+    <br>
+    <div class="form-floating">
+      <input type="password" class="form-control" id="floatingPassword" name="password" placeholder="Password"
+        minlength="8" required>
+      <label for="floatingPassword">Password (min. 8 characters)</label>
+    </div>
+    <br>
+    <select class="form-select" aria-label="Default select example" name="admin_lvl" required>
+      <option value="0">Zero (dummy user)</option>
+      <option value="1">One (can add, manage own accounts)</option>
+    </select>
+    <br>
+    <button class="w-100 btn btn-lg btn-primary" type="submit">Create user</button>
+  </form>
+</main>
+{% endif %}
+{% endblock %}

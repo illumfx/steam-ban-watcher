@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}{% endblock %}Vac-Watcher™</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-md fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Vac-Watcher</a>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                    <li class="nav-item">
+                        <a class="nav-link" aria-current="page" href="{{ url_for('index') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                    {% if not current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                    </li>
+                    {% else %}
+                    {% if current_user.admin_lvl == 2 %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin') }}">Administration</a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                    </li>
+                </ul>
+                <span class="navbar-text">
+                    Logged in as {{ current_user.username }}
+                    <span class="badge text-bg-danger">Admin Level: {{ current_user.admin_lvl }}</span>
+                </span>
+                {% endif %}
+                </ul>
+
+            </div>
+        </div>
+    </nav>
+    <br>
+    {% block header %}{% endblock %}
+    <center>
+        <div class="content container w-100 shadow m-5 p-2 bg-body-tertiary rounded">
+            <img src="{{ url_for('static', filename='vac-watcher.png') }}">
+            {% for message in get_flashed_messages() %}
+            <div class="alert alert-danger m-2 w-50" role="alert">{{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+            </div>
+            {% endfor %}
+            <br>
+            {% block content %}{% endblock %}
+        </div>
+        <div class="footer fixed-bottom">
+            {% block footer %}
+            &copy; Copyright 2023 by <a href="https://illumfx.de" target="_blank">illumfx</a>.
+            {% endblock %}
+            <div id="cb-cookie-banner" class="alert alert-dark text-center mb-0" role="alert">
+                🍪 This website uses cookies. Don't want cookies? Don't use this site 🤡.
+                <a href="https://www.cookiesandyou.com/" target="blank">Learn more</a>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+            crossorigin="anonymous"></script>
+            
+    </center>
+</body>
+
+</html>
