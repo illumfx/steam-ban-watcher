@@ -13,7 +13,7 @@ services:
       - 8000:8000
     environment:
       - DATABASE_URI=mysql://steam-ban-watcher:wedontlikecheaterssowewatchthem@mariadb/watcher?charset=utf8mb4
-      - STEAM_API_KEY=A41AB32C80FA2A48D197B3A576A05B99
+      - STEAM_API_KEY
     restart: unless-stopped
 
   mariadb:
