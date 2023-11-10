@@ -3,6 +3,6 @@ bs4
 flask
 flask-sqlalchemy
 flask-login
-mysql-connector-python
+psycopg2-binary
 apscheduler
 python-dotenv

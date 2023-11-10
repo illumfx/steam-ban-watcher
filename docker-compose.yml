@@ -2,29 +2,25 @@ version: '3.8'
 
 services:
   steam-ban-watcher:
-    build:
-      target: builder
+    build: .
     stop_signal: SIGINT
     depends_on:
-      - mariadb
-    volumes:
-      - ./watcher:/code
+      - database
     ports:
       - 8000:8000
     environment:
-      - DATABASE_URI=mysql://steam-ban-watcher:wedontlikecheaterssowewatchthem@mariadb/watcher?charset=utf8mb4
-      - STEAM_API_KEY
+      DATABASE_URI: postgresql://steam-ban-watcher:wedontlikecheaterssowewatchthem@database/watcher
+      STEAM_API_KEY: 
     restart: unless-stopped
 
-  mariadb:
-    image: mariadb:10-focal
+  database:
+    image: postgres:16.0-alpine
     volumes:
-      - ./mariadb:/var/lib/mysql
+      - ./db-data:/var/lib/postgresql/data/
     environment:
-      - MYSQL_DATABASE=watcher
-      - MYSQL_ROOT_PASSWORD=superdooperstrongpassword
-      - MYSQL_USER=steam-ban-watcher
-      - MYSQL_PASSWORD=wedontlikecheaterssowewatchthem
+      POSTGRES_DB: watcher
+      POSTGRES_USER: steam-ban-watcher
+      POSTGRES_PASSWORD: wedontlikecheaterssowewatchthem
     restart: unless-stopped
     
   proxy:

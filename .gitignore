@@ -1,6 +1,7 @@
 __pycache__
 .env
 .vscode
-test.py
+mariadb
+watcher
 instance
 out.csv
