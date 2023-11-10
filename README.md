@@ -9,6 +9,8 @@
   Nobody likes cheaters.
 </p>
 
+[![Docker Image CI](https://github.com/illumfx/steam-ban-watcher/actions/workflows/docker-image.yml/badge.svg)](https://github.com/illumfx/steam-ban-watcher/actions/workflows/docker-image.yml)
+
 ## Features
 
 A few of the things you can do with Steam-Ban-Watcher:
