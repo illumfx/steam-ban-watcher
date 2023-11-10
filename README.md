@@ -1,7 +1,7 @@
-<h1 align="center"> Steam-Ban-Checker </h1> <br>
+<h1 align="center"> Steam-Ban-Watcher </h1> <br>
 <p align="center">
   <a href="#">
-    <img alt="Steam-Ban-Checker" title="Steam-Ban-Checker" src="https://i.imgur.com/orGxLgy.png" width="200">
+    <img alt="Steam-Ban-Watcher" title="Steam-Ban-Watcher" src="https://i.imgur.com/orGxLgy.png" width="200">
   </a>
 </p>
 
@@ -11,7 +11,7 @@
 
 ## Features
 
-A few of the things you can do with Steam-Ban-Checker:
+A few of the things you can do with Steam-Ban-Watcher:
 
 * Add Steam Accounts
 * Automaticaly watch Steam Accounts for bans
