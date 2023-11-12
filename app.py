@@ -6,6 +6,7 @@ import json
 import flask_login
 import uuid as uuid_
 from datetime import datetime
+from pytz import timezone
 from dotenv import load_dotenv
 from flask import Flask, render_template, send_from_directory, request, flash, redirect, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -45,7 +46,7 @@ def background_task():
                         
                 app.last_check=datetime.now()
                 db.session.commit()    
-                               
+
 scheduler = BackgroundScheduler(daemon=True)
 scheduler.add_job(func=background_task, trigger="interval", seconds=60)
 scheduler.start()
@@ -55,6 +56,9 @@ app.config["SECRET_KEY"] = os.urandom(24).hex()
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URI")
 #app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite://"
 app.last_check = datetime.now()
+
+# All timezones: https://gist.github.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568
+app.jinja_env.globals["TIMEZONE"] = timezone(os.environ.get("TIMEZONE", "UTC"))
 
 db.init_app(app)
 
@@ -145,7 +149,7 @@ def get_steamid(account_name):
     
 @app.route("/favicon.ico")
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, "static"), "favicon.ico", mimetype="image/vnd.microsoft.icon")
+    return send_from_directory(os.path.join(app.root_path, "static"), "favicon.ico")
                 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -172,6 +176,8 @@ def index():
                         db.session.commit()
                     else:
                         flash("Steam ID duplicate")
+            else:
+                flash("Invalid Steam account")
         return redirect(url_for("index"))
 
 @app.route("/login", methods=["GET", "POST"])
@@ -281,5 +287,5 @@ def admin():
         
     
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=os.getenv("PORT"))
+    app.run(host="0.0.0.0", port=os.getenv("PORT"), debug=True)
     atexit.register(lambda: scheduler.shutdown())

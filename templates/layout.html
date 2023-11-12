@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}{% endblock %}Vac-Watcher™</title>
+    <title>{% block title %}{% endblock %}Vac-Watcher</title>
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
@@ -53,9 +53,7 @@
             <img src="{{ url_for('static', filename='vac-watcher.png') }}">
             {% for message in get_flashed_messages() %}
             <div class="alert alert-danger m-2 w-50" role="alert">{{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-
-            </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
             {% endfor %}
             <br>
             {% block content %}{% endblock %}
@@ -64,8 +62,8 @@
             {% block footer %}
             &copy; Copyright 2023 by <a href="https://illumfx.de" target="_blank">illumfx</a>.
             {% endblock %}
-            <div id="cb-cookie-banner" class="alert alert-dark text-center mb-0" role="alert">
-                🍪 This website uses cookies. Don't want cookies? Don't use this site 🤡.
+            <div id="cb-cookie-banner" class="alert alert-dark text-center mb-0 p-1" role="alert">
+                🍪 This website uses cookies. Don't want cookies? Don't use this site. 🤡
                 <a href="https://www.cookiesandyou.com/" target="blank">Learn more</a>
             </div>
         </div>

@@ -1,7 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
-<h1 class="text-center text-danger">Vac-Watcher</h1>
-<h4 class="text-center">Last update: {{ last_checked.strftime("%d.%m.%Y %H:%M:%S") }}</h4>
+<div class="text-center">
+  <h1 class="text-danger">Vac-Watcher</h1>
+  <h4>Last update: {{ last_checked.astimezone(TIMEZONE).strftime("%d.%m.%Y %H:%M:%S") }}</h4>
+</div>
 <br>
 {% if current_user.is_authenticated %}
 <form method="post">
@@ -47,9 +49,9 @@
             {% else %}
             <td>Not banned</td>
             {% endif %}
-            <td>{{ account.watching_since.strftime("%d.%m.%Y %H:%M:%S") }}</td>
+            <td>{{ account.watching_since.astimezone(TIMEZONE).strftime("%d.%m.%Y %H:%M:%S") }}</td>
             {% if account.banned_since %}
-            <td>{{ account.banned_since.strftime("%d.%m.%Y %H:%M:%S") }}</td>
+            <td>{{ account.banned_since.astimezone(TIMEZONE).strftime("%d.%m.%Y %H:%M:%S") }}</td>
             {% else %}
             <td>Never</td>
             {% endif %}

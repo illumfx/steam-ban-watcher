@@ -6,10 +6,9 @@ services:
     stop_signal: SIGINT
     depends_on:
       - database
-    expose:
-      - 8000
     environment:
       DATABASE_URI: postgresql://steam-ban-watcher:wedontlikecheaterssowewatchthem@database/watcher
+      TIMEZONE: Europe/Berlin
       STEAM_API_KEY: 
     restart: unless-stopped
 
