@@ -147,7 +147,7 @@ def get_steamid(account_name):
         # Success code is 42 so no match
         return
     
-@app.route("/favicon.ico")
+@app.get("/favicon.ico")
 def favicon():
     return send_from_directory(os.path.join(app.root_path, "static"), "favicon.ico")
                 
@@ -204,19 +204,19 @@ def login():
             # hackerman?!?!???
             return redirect(url_for("index"))
         
-@app.route("/self")
+@app.get("/self")
 @flask_login.login_required
 def self():
     accounts = db.session.execute(db.select(models.SteamAccount).filter_by(admin_account=flask_login.current_user)).scalars()
     return render_template("index.html", accounts=accounts)
         
-@app.route("/logout")
+@app.get("/logout")
 @flask_login.login_required
 def logout():
     flask_login.logout_user()
     return redirect(url_for("index"))
 
-@app.route("/info-steam-account/<account_id>", methods=["GET"])
+@app.get("/info-steam-account/<account_id>")
 @flask_login.login_required
 def info_steam_account(account_id):
     if steam_account := db.session.execute(db.select(models.SteamAccount).filter_by(steam_id=account_id)).scalar_one_or_none():
@@ -225,7 +225,7 @@ def info_steam_account(account_id):
         flash("Unknown account")
         return redirect(url_for("index"))
 
-@app.route("/edit-steam-account/<account_id>", methods=["POST"])
+@app.post("/edit-steam-account/<account_id>")
 @flask_login.login_required
 def edit_steam_account(account_id):
     if steam_account := db.session.execute(db.select(models.SteamAccount).filter_by(steam_id=account_id)).scalar_one_or_none():
@@ -240,7 +240,7 @@ def edit_steam_account(account_id):
         flash("Unknown account")
         return redirect(url_for("index"))
 
-@app.route("/delete-steam-account/<account_id>", methods=["POST"])
+@app.post("/delete-steam-account/<account_id>")
 @flask_login.login_required
 def delete_steam_account(account_id: int):
     if account := models.SteamAccount.query.filter_by(steam_id=account_id):
@@ -273,7 +273,7 @@ def delete_admin_account(account_id):
         
     return redirect(url_for("admin"))
 
-@app.route("/demote-admin-account/<account_id>", methods=["POST"])
+@app.post("/demote-admin-account/<account_id>")
 @flask_login.login_required
 def demote_admin_account(account_id):
     if flask_login.current_user.admin_lvl == 2:
@@ -291,7 +291,7 @@ def demote_admin_account(account_id):
         
     return redirect(url_for("admin"))
 
-@app.route("/promote-admin-account/<account_id>", methods=["POST"])
+@app.post("/promote-admin-account/<account_id>")
 @flask_login.login_required
 def promote_admin_account(account_id):
     if flask_login.current_user.admin_lvl == 2:
@@ -337,7 +337,7 @@ def create_user():
     return redirect(url_for("admin"))
 
 
-@app.route("/admin")
+@app.get("/admin")
 @flask_login.login_required
 def admin():
     if flask_login.current_user.admin_lvl == 2:
