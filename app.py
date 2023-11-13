@@ -20,52 +20,52 @@ from database import db
 load_dotenv()
 
 REGEX = r'(?P<CUSTOMPROFILE>https?://steamcommunity.com/id/[A-Za-z_0-9]+)|(?P<CUSTOMURL>/id/[A-Za-z_0-9]+)|(?P<PROFILE>https?://steamcommunity.com/profiles/[0-9]+)|(?P<STEAMID2>STEAM_[10]:[10]:[0-9]+)|(?P<STEAMID3>\[U:[10]:[0-9]+\])|(?P<steam_account>[^/][0-9]{8,})'
-UNSUPPORTED_GROUPS = ["STEAMID2", "STEAMID3"]
+UNSUPPORTED_GROUPS = ["STEAMID2", "STEAMID3"] # Don't know, don't care
 
 def background_task():
     with app.app_context():
         if accounts := db.session.execute(db.select(models.SteamAccount).order_by(models.SteamAccount.id)).scalars():
             for account in accounts:
-                bans = get_bans("https://steamcommunity.com/profiles/" + account.steam_id)
-                new_ban = False
-                for ban in bans:
-                    if ban[1] == "vac":
-                        if account.vac_banned == False:
-                            new_ban = True
-                            account.vac_banned = True
-                            account.times_banned = account.times_banned + 1
-                    
-                    if ban[1] == "game":
-                        if account.game_banned == False:
-                            new_ban = True
-                            account.game_banned = True
-                            account.times_banned = account.times_banned + 1
-                    
-                    if new_ban:
-                        account.banned_since = datetime.now()
+                if not account.admin_account.admin_lvl == 0:
+                    bans = get_bans("https://steamcommunity.com/profiles/" + account.steam_id)
+                    new_ban = False
+                    for ban in bans:
+                        if ban[1] == "vac":
+                            if account.vac_banned == False:
+                                new_ban = True
+                                account.vac_banned = True
+                                account.times_banned = account.times_banned + 1
                         
-                app.last_check=datetime.now()
-                db.session.commit()    
+                        if ban[1] == "game":
+                            if account.game_banned == False:
+                                new_ban = True
+                                account.game_banned = True
+                                account.times_banned = account.times_banned + 1
+                        
+                        if new_ban:
+                            account.banned_since = datetime.now()
+                            
+                    app.jinja_env.globals["LAST_CHECK"] = datetime.now()
+                    db.session.commit()    
 
 scheduler = BackgroundScheduler(daemon=True)
-scheduler.add_job(func=background_task, trigger="interval", seconds=60)
+scheduler.add_job(func=background_task, trigger="interval", seconds=120)
 scheduler.start()
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.urandom(24).hex()
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URI")
-#app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite://"
-app.last_check = datetime.now()
 
 # All timezones: https://gist.github.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568
 app.jinja_env.globals["TIMEZONE"] = timezone(os.environ.get("TIMEZONE", "UTC"))
+app.jinja_env.globals["LAST_CHECK"] = datetime.now()
 
 db.init_app(app)
 
 with app.app_context():
     db.create_all()
     if not db.session.execute(db.select(models.AdminAccount).filter_by(admin_lvl=2)).scalar_one_or_none():
-        pw = os.urandom(24).hex()
+        pw = os.environ.get("DEFAULT_ADMIN_PASSWORD", None) or os.urandom(24).hex()
         print(f"No admin account with admin lvl 2 found, created a new one:\nUsername: admin\nPassword: {pw}")
         new_admin = models.AdminAccount(
             uuid = str(uuid_.uuid4()),
@@ -155,7 +155,7 @@ def favicon():
 def index():
     if request.method == "GET":
         accounts = db.session.execute(db.select(models.SteamAccount).order_by(models.SteamAccount.id)).scalars()
-        return render_template("index.html", accounts=accounts, last_checked=app.last_check)
+        return render_template("index.html", accounts=accounts)
     elif request.method == "POST":
         if flask_login.current_user.is_authenticated:
             display_name = request.form["name"]
@@ -168,7 +168,7 @@ def index():
                         flash("Wrong Steam ID")
                     elif not db.session.execute(db.select(models.SteamAccount).filter_by(steam_id=steamid)).scalar_one_or_none():
                         user = models.SteamAccount(
-                            added_by = flask_login.current_user.uuid,
+                            admin_account = flask_login.current_user,
                             display_name = display_name,
                             steam_id = steamid
                         )
@@ -204,31 +204,47 @@ def login():
             # hackerman?!?!???
             return redirect(url_for("index"))
         
+@app.route("/self")
+@flask_login.login_required
+def self():
+    accounts = db.session.execute(db.select(models.SteamAccount).filter_by(admin_account=flask_login.current_user)).scalars()
+    return render_template("index.html", accounts=accounts)
+        
 @app.route("/logout")
 @flask_login.login_required
 def logout():
     flask_login.logout_user()
     return redirect(url_for("index"))
 
-@app.route("/info_steam_account/<account_id>", methods=["GET"])
+@app.route("/info-steam-account/<account_id>", methods=["GET"])
 @flask_login.login_required
 def info_steam_account(account_id):
     if steam_account := db.session.execute(db.select(models.SteamAccount).filter_by(steam_id=account_id)).scalar_one_or_none():
-        return render_template("info.html", steam_account=steam_account, added_by=db.session.execute(db.select(models.AdminAccount).filter_by(uuid=steam_account.added_by)).scalar_one_or_none())
+        return render_template("info.html", steam_account=steam_account)
     else:
         flash("Unknown account")
         return redirect(url_for("index"))
 
-@app.route("/update_steam_account/<account_id>", methods=["GET", "POST"])
+@app.route("/edit-steam-account/<account_id>", methods=["POST"])
 @flask_login.login_required
-def update_steam_account(account_id):
-    return render_template("update.html")
+def edit_steam_account(account_id):
+    if steam_account := db.session.execute(db.select(models.SteamAccount).filter_by(steam_id=account_id)).scalar_one_or_none():
+        new_name = request.form["new_name"]
+        if new_name == steam_account.display_name:
+            flash("Display name can't be the same")
+            return redirect(url_for("index"))
+        steam_account.display_name = new_name
+        db.session.commit()
+        return redirect(url_for("index"))
+    else:
+        flash("Unknown account")
+        return redirect(url_for("index"))
 
-@app.route("/delete_steam_account/<account_id>", methods=["POST"])
+@app.route("/delete-steam-account/<account_id>", methods=["POST"])
 @flask_login.login_required
 def delete_steam_account(account_id: int):
     if account := models.SteamAccount.query.filter_by(steam_id=account_id):
-        if flask_login.current_user.admin_lvl == 2 or account.first().added_by == flask_login.current_user.uuid:
+        if flask_login.current_user.admin_lvl == 2 or account.first().admin_account == flask_login.current_user:
             account.delete()
             db.session.commit() 
     else:
@@ -236,7 +252,7 @@ def delete_steam_account(account_id: int):
         
     return redirect(url_for("index"))
 
-@app.route("/delete_admin_account/<account_id>", methods=["GET", "POST"])
+@app.route("/delete-admin-account/<account_id>", methods=["GET", "POST"])
 @flask_login.login_required
 def delete_admin_account(account_id):
     if flask_login.current_user.admin_lvl == 2:
@@ -245,7 +261,7 @@ def delete_admin_account(account_id):
                 flash("Superuser accounts can't be deleted")
             else:
                 db.session.execute(
-                    delete(models.SteamAccount).filter_by(added_by=account.first().uuid)
+                    delete(models.SteamAccount).filter_by(admin_account=account.first())
                 )
                 account.delete()
                 db.session.commit()              
@@ -257,15 +273,49 @@ def delete_admin_account(account_id):
         
     return redirect(url_for("admin"))
 
-
-@app.route("/admin", methods=["GET", "POST"])
+@app.route("/demote-admin-account/<account_id>", methods=["POST"])
 @flask_login.login_required
-def admin():
+def demote_admin_account(account_id):
+    if flask_login.current_user.admin_lvl == 2:
+        if account := db.session.execute(db.select(models.AdminAccount).filter_by(uuid=account_id)).scalar_one_or_none():
+            if account.admin_lvl > 1:
+                flash("Superuser accounts can't be demoted")
+            else:
+                account.admin_lvl = account.admin_lvl - 1
+                db.session.commit()              
+        else:
+            flash("Account doesn't exist")
+        
+    else:
+        flash("Unauthorized")
+        
+    return redirect(url_for("admin"))
+
+@app.route("/promote-admin-account/<account_id>", methods=["POST"])
+@flask_login.login_required
+def promote_admin_account(account_id):
+    if flask_login.current_user.admin_lvl == 2:
+        if account := db.session.execute(db.select(models.AdminAccount).filter_by(uuid=account_id)).scalar_one_or_none():
+            if account.admin_lvl > 1:
+                flash("Superuser accounts can't be promoted")
+            else:
+                account.admin_lvl = account.admin_lvl + 1
+                db.session.commit()              
+        else:
+            flash("Account doesn't exist")
+        
+    else:
+        flash("Unauthorized")
+        
+    return redirect(url_for("admin"))
+
+@app.route("/create-user", methods=["GET", "POST"])
+@flask_login.login_required
+def create_user():
     if flask_login.current_user.admin_lvl == 2:
         if request.method == "GET":
-            accounts = db.session.execute(db.select(models.AdminAccount).order_by(models.AdminAccount.id)).scalars()
-            return render_template("admin.html", accounts=accounts)
-        elif request.method == "POST":
+            return render_template("create_user.html")
+        else:
             # assuming user creation
             _username = request.form["username"]
             _password = request.form["password"]
@@ -281,7 +331,18 @@ def admin():
                 db.session.add(new_admin)
                 db.session.commit()
             return redirect(url_for("admin"))
-                
+    else:
+        flash("Unauthorized")
+        
+    return redirect(url_for("admin"))
+
+
+@app.route("/admin")
+@flask_login.login_required
+def admin():
+    if flask_login.current_user.admin_lvl == 2:
+        accounts = db.session.execute(db.select(models.AdminAccount).order_by(models.AdminAccount.id)).scalars()
+        return render_template("admin.html", accounts=accounts)          
     else:
         return redirect(url_for("index"))
         

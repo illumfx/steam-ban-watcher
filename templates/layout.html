@@ -14,13 +14,10 @@
 <body>
     <nav class="navbar navbar-expand-md fixed-top">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">Vac-Watcher</a>
+            <a class="navbar-brand" href="{{ url_for('index') }}">Vac-Watcher</a>
             </button>
             <div class="collapse navbar-collapse" id="navbarCollapse">
                 <ul class="navbar-nav me-auto mb-2 mb-md-0">
-                    <li class="nav-item">
-                        <a class="nav-link" aria-current="page" href="{{ url_for('index') }}">Home</a>
-                    </li>
                     <li class="nav-item">
                     {% if not current_user.is_authenticated %}
                     <li class="nav-item">
@@ -28,10 +25,16 @@
                     </li>
                     {% else %}
                     {% if current_user.admin_lvl == 2 %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin') }}">Administration</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">Administration</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('admin') }}">Admin Page</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('create_user') }}">Create User</a></li>
+                        </ul>
                     </li>
                     {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('self') }}">Self</a>
                     <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
                     </li>
@@ -49,13 +52,14 @@
     <br>
     {% block header %}{% endblock %}
     <center>
-        <div class="content container w-100 shadow m-5 p-2 bg-body-tertiary rounded">
+        <div class="position-relative content container w-100 shadow m-5 p-2 bg-body-tertiary rounded">
             <img src="{{ url_for('static', filename='vac-watcher.png') }}">
             {% for message in get_flashed_messages() %}
-            <div class="alert alert-danger m-2 w-50" role="alert">{{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
+            <div class="alert alert-danger alert-dismissible m-2 w-50 fade show" role="alert">
+                <strong>You did an oopsie!</strong> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
             {% endfor %}
-            <br>
             {% block content %}{% endblock %}
         </div>
         <div class="footer fixed-bottom">

@@ -10,6 +10,7 @@ services:
       DATABASE_URI: postgresql://steam-ban-watcher:wedontlikecheaterssowewatchthem@database/watcher
       TIMEZONE: Europe/Berlin
       STEAM_API_KEY: 
+      DEFAULT_ADMIN_PASSWORD:
     restart: unless-stopped
 
   database:

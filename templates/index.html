@@ -2,15 +2,15 @@
 {% block content %}
 <div class="text-center">
   <h1 class="text-danger">Vac-Watcher</h1>
-  <h4>Last update: {{ last_checked.astimezone(TIMEZONE).strftime("%d.%m.%Y %H:%M:%S") }}</h4>
+  <h4>Last update: {{ LAST_CHECK.astimezone(TIMEZONE).strftime("%d.%m.%Y %H:%M:%S") }}</h4>
 </div>
 <br>
-{% if current_user.is_authenticated %}
+{% if current_user.is_authenticated and current_user.admin_lvl >= 1 and request.path != "/self" %}
 <form method="post">
     <div class="row">
         <div class="col">
             <input type="text" class="form-control" placeholder="Custom Name" , name="name" ,
-                value="{{ request.form['name'] }}" , required>
+                value="{{ request.form['name'] }}" minlength="4" maxlength="20" required>
         </div>
         <div class="col">
             <input type="text" class="form-control" placeholder="Steam Account" , name="account" ,
@@ -27,7 +27,7 @@
     <thead>
         <tr>
             <th>ID</th>
-            <th>Name</th>
+            <th>Display Name</th>
             <th>URL</th>
             <th>Status</th>
             <th>Watching Since</th>
@@ -38,6 +38,7 @@
         </tr>
     </thead>
     {% for account in accounts %}
+    {% if account.admin_account.admin_lvl != 0 %}
     <tbody>
         <tr>
             <th>{{ account.id }}</th>
@@ -61,7 +62,6 @@
                   <div class="modal-content">
                     <div class="modal-header">
                       <h1 class="modal-title fs-5" id="deleteModalLabel">Delete</h1>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                       Are you sure you want to delete <i>{{ account.steam_id }}</i>?
@@ -75,12 +75,33 @@
                   </div>
                 </div>
               </div>
+
+              <div class="modal fade" id="editModal{{ account.id }}" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h1 class="modal-title fs-5" id="editModalLabel">Edit</h1>
+                    </div>
+                    <div class="modal-body">
+                      Currently editing <i>{{ account.steam_id }}</i>: 
+                      <form action="{{ url_for('edit_steam_account', account_id=account.steam_id) }}" method="post">
+                      <input class="form-control" minlength="4" maxlength="20" name="new_name" type="text" value="{{ account.display_name }}" required>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>    
+                      <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Save changes</button>
+                    </form>
+                    </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
               {% if current_user.admin_lvl >= 1 %}
               <th>    
                 <a class="btn btn-warning btn-sm" href="{{ url_for('info_steam_account', account_id=account.steam_id) }}" role="button"><i class="bi-info"></i></a>  
-                {% if current_user.uuid == account.added_by or current_user.admin_lvl == 2 %}
-                <a class="btn btn-primary btn-sm" href="{{ url_for('update_steam_account', account_id=account.steam_id) }}"><i class="bi-pencil-square"></i></a>
-                <a class="btn btn-danger btn-sm" href="{{ url_for('delete_steam_account', account_id=account.steam_id) }}" data-bs-toggle="modal" data-bs-target="#deleteModal{{ account.id }}" role="button"><i class="bi-trash"></i></a>
+                {% if current_user == account.admin_account or current_user.admin_lvl == 2 %}
+                <a class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editModal{{ account.id }}" role="button"><i class="bi-pencil-square"></i></a>
+                <a class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ account.id }}" role="button"><i class="bi-trash"></i></a>
                 {% else %}
         
                 <a class="btn btn-primary btn-sm disabled" role="button"><i class="bi-pencil-square"></i></a>
@@ -91,8 +112,9 @@
               <th>    
                 <a class="btn btn-warning btn-sm disabled" role="button"><i class="bi-info"></i></a>   
                 <a class="btn btn-primary btn-sm disabled" role="button"><i class="bi-pencil-square"></i></a>
-                <a class="btn btn-danger btn-sm disabled" data-bs-toggle="modal" data-bs-target="#deleteModal" role="button"><i class="bi-trash"></i></a>
+                <a class="btn btn-danger btn-sm disabled" role="button"><i class="bi-trash"></i></a>
             </th> 
+            {% endif %}
             {% endif %}
             {% endif %}
         </tr>

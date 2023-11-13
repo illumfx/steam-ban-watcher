@@ -26,13 +26,13 @@
             {% else %}
             <td>Not banned</td>
             {% endif %}
-            <td>{{ steam_account.watching_since.strftime("%d.%m.%Y %H:%M:%S") }}</td>
+            <td>{{ steam_account.watching_since.astimezone(TIMEZONE).strftime("%d.%m.%Y %H:%M:%S") }}</td>
             {% if steam_account.banned_since %}
-            <td>{{ steam_account.banned_since.strftime("%d.%m.%Y %H:%M:%S") }}</td>
+            <td>{{ steam_account.banned_since.astimezone(TIMEZONE).strftime("%d.%m.%Y %H:%M:%S") }}</td>
             {% else %}
             <td>Never</td>
             {% endif %}   
-            <td>{{ added_by.username }}</td>
+            <td>{{ steam_account.admin_account.username }}</td>
             <td>{{ steam_account.vac_banned }}</td>
             <td>{{ steam_account.game_banned }}</td>
         </tr>
