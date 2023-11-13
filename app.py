@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, send_from_directory, request, flash, redirect, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy import delete
+from sqlalchemy.exc import IntegrityError
 from bs4 import BeautifulSoup
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -233,8 +234,13 @@ def edit_steam_account(account_id):
         if new_name == steam_account.display_name:
             flash("Display name can't be the same")
             return redirect(url_for("index"))
-        steam_account.display_name = new_name
-        db.session.commit()
+        
+        try:
+            steam_account.display_name = new_name
+            db.session.commit()
+        except IntegrityError:
+            flash("Display name already exists")
+            return redirect(url_for("index"))
         return redirect(url_for("index"))
     else:
         flash("Unknown account")
