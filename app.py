@@ -47,7 +47,7 @@ def background_task():
                             account.banned_since = datetime.now()
                             
                     app.jinja_env.globals["LAST_CHECK"] = datetime.now()
-                    db.session.commit()    
+                    db.session.commit()
 
 scheduler = BackgroundScheduler(daemon=True)
 scheduler.add_job(func=background_task, trigger="interval", seconds=120)
